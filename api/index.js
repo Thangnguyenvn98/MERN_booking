@@ -20,6 +20,7 @@ app.get('/test',(req,res)=>{
 
 app.post('/register',(req,res)=>{
     const{name,email,password} = req.body
+    
     res.json({name,email,password})
 
 })
