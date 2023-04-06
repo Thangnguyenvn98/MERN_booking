@@ -1,19 +1,33 @@
-import axios from "axios";
+import axios, {AxiosError} from "axios";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function RegisterPage(){
     const[name,setName]=useState('')
     const[email,setEmail]=useState('')
     const[password,setPassword]=useState('')
+    const [redirect,setRedirect] = useState(false)
 
-    const registerUser = (e:any) => {
-      e.preventDefault()
-      axios.post('/register',{
-        name,
-        email,
-        password
-      })
+    const registerUser = async (e:any) => {
+      e.preventDefault();
+        try {
+    const response = await axios.post("/register", {
+      name,
+      email,
+      password,
+    });
+    toast.success("Registration successful!");
+    // call your function here
+  } catch (error) {
+    if (error instanceof AxiosError){
+      toast.error(error.response?.data?.message || "Registration failed.")} 
+    
+  }
+};
+
+    if(redirect){
+      return <Navigate to={'/login'}/>
     }
 
     return (
