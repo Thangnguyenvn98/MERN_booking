@@ -1,16 +1,23 @@
 const express = require('express')
 const cors = require('cors')
 const app = express()
-const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
+const bcrypt = require('bcryptjs') //Hiding passwwords
+const jwt = require('jsonwebtoken') //Sending cookie
 const mongoose = require('mongoose')
+const multer  = require('multer') //upload image from PC
+
 const User = require('./models/User')
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser') //Saving cookie and parse it
+const imageDownloader = require('image-downloader')
 require('dotenv').config()
 
 
-const bcryptSalt = bcrypt.genSaltSync(10)
+const bcryptSalt = bcrypt.genSaltSync(10) //documentation consut
 const jwtSecret = 'dfgdfgsegresgsaeqwerew' //anything here
+
+const photosMiddleware= multer({ dest: 'uploads' }) //from documentations
+const fs= require('fs')
+
 
 app.use(express.json())
 app.use(cookieParser())
@@ -18,6 +25,7 @@ app.use(cors({
     credentials:true,
     origin: 'http://localhost:3000'
 }))
+app.use('/uploads',express.static(__dirname + '/uploads'))
 
 mongoose.connect(process.env.MONGOOSE_DATABASE_URL)
 
@@ -78,6 +86,30 @@ app.post('/logout',(req,res)=>{
     res.cookie('token','').json(true)
 })
 
+app.post('/upload-by-link',async (req,res)=>{
+    const{link} = req.body
+    const newName = 'photo'+Date.now()+'.jpg'
+   try{await imageDownloader.image({
+        url: link,
+        dest: __dirname + '/uploads/'+newName
+    })
+    res.json(newName)}catch(err){
+        res.status(500).json({ error: 'Failed to download image' })
+    }
+})
+                                    //photos here is the key name from front-end when setting data from FormData
+app.post('/upload',photosMiddleware.array('photos',100),(req, res) => {
+    photosUploaded = []
+    for(let i = 0; i <req.files.length;i++){
+        const {path, originalname} = req.files[i];
+        const originalFileName = originalname.split('.')
+        const extension = originalFileName[originalFileName.length - 1]
+        const newPath = `${path}.${extension}`
+        fs.renameSync(path,newPath)
+        photosUploaded.push(newPath.replace('uploads/',''))
+    }
+    res.json(photosUploaded)
+})
 
 app.listen(4000,() => {
     console.log('listening on port 4000')
