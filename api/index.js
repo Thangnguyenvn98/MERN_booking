@@ -7,6 +7,7 @@ const mongoose = require('mongoose')
 const multer  = require('multer') //upload image from PC
 
 const User = require('./models/User')
+const Place = require('./models/Place')
 const cookieParser = require('cookie-parser') //Saving cookie and parse it
 const imageDownloader = require('image-downloader')
 require('dotenv').config()
@@ -109,6 +110,28 @@ app.post('/upload',photosMiddleware.array('photos',100),(req, res) => {
         photosUploaded.push(newPath.replace('uploads/',''))
     }
     res.json(photosUploaded)
+})
+
+app.post('/places',(req, res) => {
+    const {token} = req.cookies
+    const {title,address,photos,description,perks,extraInfo,checkIn,checkOut,maxGuests} = req.body
+    jwt.verify(token, jwtSecret, {}, async (err, user) => {
+        if(err) throw err
+        const placeCreated = await Place.create({
+            owner:user.id,
+            title: title,
+            address:address,
+            photos:photos,
+            description:description,
+            perks:perks,
+            extraInfo:extraInfo,
+            checkIn:checkIn,
+            checkOut:checkOut,
+            maxGuests:maxGuests,
+
+        })
+        res.json(placeCreated)
+    })
 })
 
 app.listen(4000,() => {
