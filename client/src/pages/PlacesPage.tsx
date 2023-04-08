@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AccountNav from "../AccountNav";
 import axios from "axios";
+import PlaceImg from "../PlaceImg";
 
 interface Place {
     _id: string,
@@ -46,7 +47,7 @@ export default function PlacesPage(){
             {places.length > 0 && places.map(place => (
               <Link to={'/account/accomodations/'+place._id} key={place._id} className="flex cursor-pointer gap-4 bg-gray-100 p-4 rounded-2xl">
                 <div className="flex h-32 w-32 bg-gray-300 object-cover shrink-0" >
-                  <img src={"http://localhost:4000/uploads/"+place.photos[0]} alt="asd" className="w-32" />
+                  <PlaceImg place={place} key={place._id}/>
                 </div>
                 <div className="grow-0 shrink-0">
                   <h2 className="text-xl">{place.title}</h2>

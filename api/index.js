@@ -8,6 +8,7 @@ const multer  = require('multer') //upload image from PC
 
 const User = require('./models/User')
 const Place = require('./models/Place')
+const Booking = require('./models/Booking')
 const cookieParser = require('cookie-parser') //Saving cookie and parse it
 const imageDownloader = require('image-downloader')
 require('dotenv').config()
@@ -167,6 +168,33 @@ app.put('/places',async (req,res)=>{
 
 app.get('/allPlaces',async (req,res)=>{
     res.json(await Place.find())
+})
+
+app.post('/bookings',async (req,res)=>{
+    const userData = await getUserDataFromReq(req)
+    const{place,checkIn,checkOut,numberOfGuests,name,phoneNumber,price} = req.body
+    try{
+        const data = await Booking.create({place,user:userData.id,checkIn,checkOut,numberOfGuests,name,phoneNumber,price})
+        res.json(data)
+    }catch(err){
+        res.status(500).json( err )
+
+    }
+  
+})
+
+const getUserDataFromReq = (req) => {
+    return new Promise((resolve,reject) => {
+        jwt.verify(req.cookies.token,jwtSecret,{},async(err,user) => {
+            if(err)throw err
+            resolve(user)
+        })
+    })
+}
+
+app.get('/bookings',async (req,res)=>{
+    const userData = await getUserDataFromReq(req)
+    res.json(await Booking.find({user:userData.id}).populate('place'))  //place here is the key on Place model
 })
 
 app.listen(4000,() => {
