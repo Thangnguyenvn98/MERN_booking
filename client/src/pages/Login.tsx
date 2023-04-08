@@ -31,7 +31,7 @@ export default function LoginPage(){
     }
   };
     if (redirect){
-      return <Navigate to={'/account/profile'}/>
+      return <Navigate to={'/account'}/>
     }
 
 

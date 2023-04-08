@@ -2,9 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 
 export default function AccountNav(){
     const location = useLocation();
-    console.log(location)
     const page = location.pathname.split('/')[1]
-    console.log(page)
    
 
     return (

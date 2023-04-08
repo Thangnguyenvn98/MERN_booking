@@ -114,11 +114,11 @@ app.post('/upload',photosMiddleware.array('photos',100),(req, res) => {
 
 app.post('/places',(req, res) => {
     const {token} = req.cookies
-    const {title,address,photos,description,perks,extraInfo,checkIn,checkOut,maxGuests} = req.body
+    const {title,address,photos,description,perks,extraInfo,checkIn,checkOut,maxGuests,price} = req.body
     jwt.verify(token, jwtSecret, {}, async (err, user) => {
         if(err) throw err
         const placeCreated = await Place.create({
-            owner:user.id,
+            owner:user.id, //userId here is the ID from UserSchema created not the place ID itself
             title: title,
             address:address,
             photos:photos,
@@ -128,10 +128,45 @@ app.post('/places',(req, res) => {
             checkIn:checkIn,
             checkOut:checkOut,
             maxGuests:maxGuests,
+            price:price
 
         })
         res.json(placeCreated)
     })
+})
+
+app.get('/places',async (req,res)=>{
+    const {token} = req.cookies
+    jwt.verify(token, jwtSecret, {}, async (err,user)=>{
+        const {id} = user
+        res.json(await Place.find({owner:id}))
+    })
+})
+
+app.get('/places/:id',async (req,res)=>{
+    const {id} = req.params
+    res.json(await Place.findById(id))
+})
+
+app.put('/places',async (req,res)=>{
+    const {token} = req.cookies
+
+    const {id,title,address,photos,description,perks,extraInfo,checkIn,checkOut,maxGuests,price} = req.body
+    jwt.verify(token, jwtSecret, {}, async (err,user)=>{
+        if(err) throw err
+        const placeDocument = await Place.findById(id)
+
+        if(user.id === placeDocument.owner.toString()){
+            placeDocument.set({title,address,photos,description,perks,extraInfo,checkIn,checkOut,maxGuests,price})
+        
+        await placeDocument.save()
+        res.json('ok')
+    }
+    })
+})
+
+app.get('/allPlaces',async (req,res)=>{
+    res.json(await Place.find())
 })
 
 app.listen(4000,() => {
