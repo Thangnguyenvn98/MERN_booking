@@ -2,6 +2,7 @@ import axios from "axios"
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import BookingPage from "../BookingWidget";
+import Image from "../Image";
 
 interface Place {
     _id: string,
@@ -53,7 +54,7 @@ export default function PlaceDetails(){
                 {place?.photos?.length>0 && place.photos.map(photo => (
                     
                         <div key={place._id}>
-                            <img src={`http://localhost:4000/uploads/${photo}`} alt="photolist" />
+                            <Image src={photo} alt="photolist" />
                         </div>
                     ))}
                 </div>
@@ -78,16 +79,16 @@ export default function PlaceDetails(){
                <div className="grid gap-2 grid-cols-[2fr_1fr] rounded-2xl overflow-hidden">
                 <div>
                     {place.photos?.[0] &&(
-                        <img src={`http://localhost:4000/uploads/${place.photos[0]}`} alt="photo1" onClick={()=>setShowPhoto(true)} className="aspect-square object-cover cursor-pointer"/>
+                        <Image src={place.photos[0]} alt="photo1" onClick={()=>setShowPhoto(true)} className="aspect-square object-cover cursor-pointer"/>
                     )}
                 </div>
                 <div className="grid ">
                     {place.photos?.[1] &&(
-                        <img src={`http://localhost:4000/uploads/${place.photos[1]}`} alt="photo2" onClick={()=>setShowPhoto(true)} className="aspect-square object-cover cursor-pointer"/>
+                        <Image src={place.photos[1]} alt="photo2" onClick={()=>setShowPhoto(true)} className="aspect-square object-cover cursor-pointer"/>
                     )}
                     <div className="overflow-hidden ">
                     {place.photos?.[2] &&(
-                        <img src={`http://localhost:4000/uploads/${place.photos[2]}`} alt="photo3"  onClick={()=>setShowPhoto(true)} className="aspect-square object-cover relative top-4 cursor-pointer"/>
+                        <Image src={place.photos[2]} alt="photo3"  onClick={()=>setShowPhoto(true)} className="aspect-square object-cover relative top-4 cursor-pointer"/>
                     )}
                     </div>
                     </div>

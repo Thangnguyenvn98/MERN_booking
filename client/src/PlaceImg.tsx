@@ -1,3 +1,5 @@
+import Image from "./Image";
+
 interface Place {
     _id: string,
     owner: string;
@@ -20,14 +22,14 @@ export default function PlaceImg({place}:{place:Place}, {className=""}) {
     }
 
     if(!className){
-        className = "object-cover"
+        className = "object-cover aspect-square"
     }
 
     return (
       <div>
         {place.photos.length > 0 && (
-          <img
-            src={"http://localhost:4000/uploads/"+place.photos[0]}
+          <Image
+            src={place.photos[0]}
             alt="asd"
             className={className}
           />

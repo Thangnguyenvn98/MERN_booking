@@ -36,7 +36,7 @@ export default function ProfilePage() {
      <AccountNav/>
     {
         page === 'account' && (
-            <div className="text-center max-w-lg mx-auto">
+            <div className="text-center max-w-lg mx-auto mt-20">
                 Logged in as {user.name} ({user.email})<br/>
                 <button onClick={logOut} className="primary max-w-sm mt-4">Log Out</button>
             </div>

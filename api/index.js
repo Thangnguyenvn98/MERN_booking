@@ -13,11 +13,11 @@ const cookieParser = require('cookie-parser') //Saving cookie and parse it
 const imageDownloader = require('image-downloader')
 require('dotenv').config()
 
-
+const {S3Client, PutObjectCommand} = require('@aws-sdk/client-s3')
 const bcryptSalt = bcrypt.genSaltSync(10) //documentation consut
 const jwtSecret = 'dfgdfgsegresgsaeqwerew' //anything here
-
-const photosMiddleware= multer({ dest: 'uploads' }) //from documentations
+const bucket = 'thang-booking-app'
+const mime = require('mime-types')
 const fs= require('fs')
 
 
@@ -27,16 +27,43 @@ app.use(cors({
     credentials:true,
     origin: 'http://localhost:3000'
 }))
-app.use('/uploads',express.static(__dirname + '/uploads'))
+app.use('/api/uploads',express.static(__dirname + '/uploads'))
 
-mongoose.connect(process.env.MONGOOSE_DATABASE_URL)
+const photosMiddleware = multer({dest:'/tmp'})
 
-app.get('/test',(req,res)=>{
+
+const uploadToS3 = async (path,originalFileName,mimemtype) => {
+    const client = new S3Client({
+        region: 'us-east-2',
+        credentials:{
+            accessKeyId: process.env.S3_ACCESS_KEY,
+            secretAccessKey: process.env.S3_SECRET_KEY
+        },
+    })
+    const parts = originalFileName.split('.')
+    const ext = parts[parts.length - 1]
+    const newFileName = Date.now()+'.'+ext
+    await client.send(new PutObjectCommand({
+        Bucket: bucket,
+        Body: fs.readFileSync(path),
+        Key: newFileName,
+        ContentType: mimemtype,
+        ACL: 'public-read'
+    }))
+
+    return `https://${bucket}.s3.amazonaws.com/${newFileName}`
+}
+
+app.get('/api/test',(req,res)=>{
+    mongoose.connect(process.env.MONGOOSE_DATABASE_URL)
+
     res.json('test pl')
 
 })
 
-app.post('/register',async (req,res)=>{
+app.post('/api/register',async (req,res)=>{
+    mongoose.connect(process.env.MONGOOSE_DATABASE_URL)
+
     const{name,email,password} = req.body
     try{
         const userReg = await User.create({
@@ -52,7 +79,9 @@ app.post('/register',async (req,res)=>{
 
 })
 
-app.post('/login', async(req,res) => {
+app.post('/api/login', async(req,res) => {
+    mongoose.connect(process.env.MONGOOSE_DATABASE_URL)
+
     const {email, password} = req.body
     const userReg = await User.findOne({ email})
     if (userReg){
@@ -71,7 +100,9 @@ app.post('/login', async(req,res) => {
     
 })
 
-app.get('/profile',(req,res)=>{
+app.get('/api/profile',(req,res)=>{
+    mongoose.connect(process.env.MONGOOSE_DATABASE_URL)
+
     const {token} = req.cookies
     if (token){
         jwt.verify(token, jwtSecret, {}, async (err, user) => {
@@ -84,36 +115,37 @@ app.get('/profile',(req,res)=>{
     }
 })
 
-app.post('/logout',(req,res)=>{
+app.post('/api/logout',(req,res)=>{
     res.cookie('token','').json(true)
 })
 
-app.post('/upload-by-link',async (req,res)=>{
+app.post('/api/upload-by-link',async (req,res)=>{
+
     const{link} = req.body
     const newName = 'photo'+Date.now()+'.jpg'
    try{await imageDownloader.image({
         url: link,
-        dest: __dirname + '/uploads/'+newName
+        dest: '/tmp/'+newName
     })
-    res.json(newName)}catch(err){
+    const url = await uploadToS3('/tmp/'+newName,newName,mime.lookup('/tmp/'+newName))
+    res.json(url)}catch(err){
         res.status(500).json({ error: 'Failed to download image' })
     }
 })
                                     //photos here is the key name from front-end when setting data from FormData
-app.post('/upload',photosMiddleware.array('photos',100),(req, res) => {
+app.post('/api/upload',photosMiddleware.array('photos',100), async (req, res) => {
     photosUploaded = []
     for(let i = 0; i <req.files.length;i++){
-        const {path, originalname} = req.files[i];
-        const originalFileName = originalname.split('.')
-        const extension = originalFileName[originalFileName.length - 1]
-        const newPath = `${path}.${extension}`
-        fs.renameSync(path,newPath)
-        photosUploaded.push(newPath.replace('uploads/',''))
+        const {path, originalname,mimetype} = req.files[i];
+        const url = await uploadToS3(path,originalname,mimetype)
+        photosUploaded.push(url)
     }
     res.json(photosUploaded)
 })
 
-app.post('/places',(req, res) => {
+app.post('/api/places',(req, res) => {
+    mongoose.connect(process.env.MONGOOSE_DATABASE_URL)
+
     const {token} = req.cookies
     const {title,address,photos,description,perks,extraInfo,checkIn,checkOut,maxGuests,price} = req.body
     jwt.verify(token, jwtSecret, {}, async (err, user) => {
@@ -136,7 +168,9 @@ app.post('/places',(req, res) => {
     })
 })
 
-app.get('/places',async (req,res)=>{
+app.get('/api/places',async (req,res)=>{
+    mongoose.connect(process.env.MONGOOSE_DATABASE_URL)
+
     const {token} = req.cookies
     jwt.verify(token, jwtSecret, {}, async (err,user)=>{
         const {id} = user
@@ -144,12 +178,16 @@ app.get('/places',async (req,res)=>{
     })
 })
 
-app.get('/places/:id',async (req,res)=>{
+app.get('/api/places/:id',async (req,res)=>{
+    mongoose.connect(process.env.MONGOOSE_DATABASE_URL)
+
     const {id} = req.params
     res.json(await Place.findById(id))
 })
 
-app.put('/places',async (req,res)=>{
+app.put('/api/places',async (req,res)=>{
+    mongoose.connect(process.env.MONGOOSE_DATABASE_URL)
+
     const {token} = req.cookies
 
     const {id,title,address,photos,description,perks,extraInfo,checkIn,checkOut,maxGuests,price} = req.body
@@ -166,11 +204,15 @@ app.put('/places',async (req,res)=>{
     })
 })
 
-app.get('/allPlaces',async (req,res)=>{
+app.get('/api/allPlaces',async (req,res)=>{
+    mongoose.connect(process.env.MONGOOSE_DATABASE_URL)
+
     res.json(await Place.find())
 })
 
-app.post('/bookings',async (req,res)=>{
+app.post('/api/bookings',async (req,res)=>{
+    mongoose.connect(process.env.MONGOOSE_DATABASE_URL)
+
     const userData = await getUserDataFromReq(req)
     const{place,checkIn,checkOut,numberOfGuests,name,phoneNumber,price} = req.body
     try{
@@ -192,7 +234,9 @@ const getUserDataFromReq = (req) => {
     })
 }
 
-app.get('/bookings',async (req,res)=>{
+app.get('/api/bookings',async (req,res)=>{
+    mongoose.connect(process.env.MONGOOSE_DATABASE_URL)
+
     const userData = await getUserDataFromReq(req)
     res.json(await Booking.find({user:userData.id}).populate('place'))  //place here is the key on Place model
 })
