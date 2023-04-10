@@ -43,7 +43,7 @@ export default function PlacesPage(){
               Add new place
             </Link>
           </div>
-          <div className="mt-4">
+          <div className="mt-8">
             {places.length > 0 && places.map(place => (
               <Link to={'/account/accomodations/'+place._id} key={place._id} className="flex cursor-pointer gap-4 bg-gray-100 p-4 rounded-2xl">
                 <div className="flex h-32 w-32 bg-gray-300 object-cover overflow-hidden " >

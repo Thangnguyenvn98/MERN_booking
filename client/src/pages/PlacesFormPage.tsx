@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import ImageUploader from "./ImageUploader";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import Perks from "./Perks";
 import AccountNav from "../AccountNav";
 import { Navigate,  useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function PlacesFormPage(){
     const {id} = useParams()
@@ -40,28 +41,40 @@ export default function PlacesFormPage(){
 
     const addNewPlace = async (e : React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        const placeData = {title,address,photos,description,perks,extraInfo,checkIn,checkOut,maxGuests,price}
-        if(id){
-           await axios.put('/places', {id, ...placeData}) //useSpreadOperator if order in the schema is different
-           setRedirect(true)
- 
+        try{
+            const placeData = {title,address,photos,description,perks,extraInfo,checkIn,checkOut,maxGuests,price}
+            if(id){
+               await axios.put('/places', {id, ...placeData})
+                //useSpreadOperator if order in the schema is different
+                toast.success("Edit your place details successfully")
+               setRedirect(true)
+     
+            }
+            else{
+            await axios.post('/places',placeData)
+            toast.success("Place created successfully")
+            setRedirect(true)
         }
-        else{
-        await axios.post('/places',placeData)
-       setRedirect(true)
-    }
+        }catch(error){
+            if(error instanceof AxiosError){
+                toast.error(error.response?.data?.message || "Failed to create/edit your place")} 
+
+            }
+        }
+
        
-    }
+    
 
     if (redirect){
         return <Navigate to ={'/account/accomodations'}/>
     }
+    
     return (
         <div>
             <AccountNav/>
                       <form onSubmit={addNewPlace}>
                         <h2 className="text-2xl mt-4">Title</h2>
-                        <input type="text" placeholder="title: MyLovely apt" value={title} onChange={(e)=>setTitle(e.target.value)} />
+                        <input type="text" placeholder="title: My lovely apt ..." value={title} onChange={(e)=>setTitle(e.target.value)} />
                         <h2 className="text-2xl mt-4">Address</h2>
                         <input type="text" placeholder="Address" value={address} onChange={(e)=>setAddress(e.target.value)}  />
                         <h2 className="text-2xl mt-4">Photos</h2>
