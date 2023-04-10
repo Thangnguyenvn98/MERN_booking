@@ -12,7 +12,7 @@ import PlaceDetails from "./pages/PlaceDetails";
 import BookingsPage from "./pages/BookingsPage";
 import BookingDetail from "./pages/BookingDetail";
 
-axios.defaults.baseURL = process.env.REACT_APP_BASE_URL
+axios.defaults.baseURL = process.env.REACT_APP_API_URL
 axios.defaults.withCredentials = true
 
  function App() {
