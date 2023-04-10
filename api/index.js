@@ -241,10 +241,9 @@ app.get('/api/bookings',async (req,res)=>{
     res.json(await Booking.find({user:userData.id}).populate('place'))  //place here is the key on Place model
 })
 
-if(process.env.API_PORT){
-    app.listen(process.env.API_PORT,() => {
+
+app.listen(4000,() => {
         console.log('listening on port 4000')
     })
-}
 
-module.exports = app
+
